@@ -6,7 +6,7 @@ export default {
   //是否设置全局焦点边框颜色 默认白色
   focusBorderColorEnable: true,
   //全局焦点边框颜色
-  focusBorderColor: "#157AFC",
+  focusBorderColor: "#ffffff",
   //是否设置全局焦点边框宽度 默认 2
   focusBorderWidthEnable: false,
   //全局焦点边框宽度

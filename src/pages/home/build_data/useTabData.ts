@@ -18,52 +18,46 @@ import { QTTab, QTTabPageData, QTWaterfallSection, QTWaterfallItem } from "@quic
  */
 export function buildO2MTabData(sourceData: Array<any>) {
   const tabs: Array<Tab> = []
-  sourceData.forEach((item, index) => {
-    const tab: Tab = {
-      id: item.id,
-      menuCode: item.menuCode,
-      menuName: item.menuName,
-      menuType: item.menuType,
-      imageWidth: item.imageWidth,
-      imageHeight: item.imageHeight,
-      image: item.image,
-      selectImage: item.currentImage,
-      focusImage: item.focusImage,
-      focusCornerImage: item.focusCornerImage,
-      cornerImage: item.cornerImage,
-      defaultHome: item.defaultHome,
-      backgroundImage: item.backgroundImage,
-      redirectType: item.actionRedirect?.redirectType,
-      action: item.actionRedirect?.action,
-      innerArgs: item.actionRedirect?.innerArgs
-    }
-    tabs.push(tab)
-  })
+  // sourceData.forEach((item, index) => {
+  //   const tab: Tab = {
+  //     id: item.id,
+  //     menuCode: item.menuCode,
+  //     menuName: item.menuName,
+  //     menuType: item.menuType,
+  //     imageWidth: item.imageWidth,
+  //     imageHeight: item.imageHeight,
+  //     image: item.image,
+  //     selectImage: item.currentImage,
+  //     focusImage: item.focusImage,
+  //     focusCornerImage: item.focusCornerImage,
+  //     cornerImage: item.cornerImage,
+  //     defaultHome: item.defaultHome,
+  //     backgroundImage: item.backgroundImage,
+  //     redirectType: item.actionRedirect?.redirectType,
+  //     action: item.actionRedirect?.action,
+  //     innerArgs: item.actionRedirect?.innerArgs
+  //   }
+  //   tabs.push(tab)
+  // })
   tabs.push({
-    id: 'short_video2',
-    menuCode: 'short_video2',
-    menuName: '短视频2',
+    id: 'video',
+    menuCode: 'video',
+    menuName: '视频',
     menuType: '0',
   })
   tabs.push({
-    id: '4k_world',
-    menuCode: '4k_world',
-    menuName: '4K世界',
+    id: 'music',
+    menuCode: 'music',
+    menuName: '音乐',
     menuType: '0',
   })
   tabs.push({
-    id: 'short_video',
-    menuCode: 'short_video',
-    menuName: '短视频',
+    id: 'image',
+    menuCode: 'image',
+    menuName: '图片',
     menuType: '0',
   })
-  tabs.push({
-    id: 'multilevelTab',
-    menuCode: 'multilevelTab',
-    menuName: '多级Tab',
-    menuType: '0',
-  })
-  
+
   return buildTransferTabAdapter(tabs)
 }
 
