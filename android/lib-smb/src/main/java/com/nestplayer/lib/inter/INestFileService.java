@@ -53,5 +53,5 @@ public interface INestFileService {
      * @param str 文件名称 首字母 后缀名
      * @return 文件名称集合
      */
-    List<String> search(String str);
+    List<NestFile> search(String str);
 }

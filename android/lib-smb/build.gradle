@@ -28,7 +28,7 @@ android {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
+//    implementation 'com.google.android.material:material:1.10.0'
     implementation 'eu.agno3.jcifs:jcifs-ng:2.1.9'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

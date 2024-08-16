@@ -6,6 +6,7 @@ public class NestFile {
     private FileType type;
     private long createTime;
     private long size;
+    private String path;
 
 
     public String getFileName() {
@@ -34,6 +35,14 @@ public class NestFile {
 
     public long getSize() {
         return size;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public void setSize(long size) {

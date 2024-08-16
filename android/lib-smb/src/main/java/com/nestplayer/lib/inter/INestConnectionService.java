@@ -1,9 +1,14 @@
 package com.nestplayer.lib.inter;
 
+import java.util.List;
 /**
  * 链接
  */
 public interface INestConnectionService {
+
+
+    List<String> scanNetwork();
+
     /**
      * 创建连接
      *
