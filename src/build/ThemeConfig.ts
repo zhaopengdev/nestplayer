@@ -6,7 +6,7 @@ export default {
   //是否设置全局焦点边框颜色 默认白色
   focusBorderColorEnable: true,
   //全局焦点边框颜色
-  focusBorderColor: "#ffffff",
+  focusBorderColor: "#E1E3E0",
   //是否设置全局焦点边框宽度 默认 2
   focusBorderWidthEnable: false,
   //全局焦点边框宽度
@@ -19,7 +19,7 @@ export default {
   focusInnerBorderEnable: true,
 
   //全局背景色
-  rootBgColor: "#252930",
+  rootBgColor: "#191C1B",
   rootBgGradientColor: ["#252930", "#2F3541"],
 
   //普通按钮文字，文字---颜色

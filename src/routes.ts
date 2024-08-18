@@ -17,6 +17,7 @@ import D2Introduction from './pages/detail2/D2Introduction.vue'
 import ranking from './pages/ranking/index.vue'
 import shortVideo from './pages/shortVideo/index.vue'
 import test from './pages/test.vue'
+import client from './pages/client/index.vue'
 
 
 const routes = [
@@ -91,5 +92,9 @@ const routes = [
     path: '/d2Introduction', name: 'd2Introduction', component: D2Introduction,
     type: ESRouteType.ES_ROUTE_TYPE_DIALOG
   },
+  {
+    path: '/client', name: 'client', component: client,
+    type: ESRouteType.ES_ROUTE_TYPE_DIALOG
+  }
 ]
 export default routes
