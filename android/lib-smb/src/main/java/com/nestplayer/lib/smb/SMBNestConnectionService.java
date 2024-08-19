@@ -24,6 +24,12 @@ public class SMBNestConnectionService implements INestConnectionService {
     private INestFileService nestFileService;
 
 
+    /**
+     * 打开连接后可以获取文件操作服务类
+     *
+     * @return 文件操作实现
+     */
+    @Override
     public INestFileService getNestFileService() {
         return nestFileService;
     }
