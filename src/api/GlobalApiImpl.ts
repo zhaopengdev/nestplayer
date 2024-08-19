@@ -1,10 +1,19 @@
-import { ESPlayerDefinition } from "@extscreen/es3-player"
+import {ESPlayerDefinition} from "@extscreen/es3-player"
 import FilterConfig from "../pages/filter/build_data/FilterConfig";
 import bg_play from "./home/mock/bg_play";
-import { IGlobalApi } from "./IGlobalApi";
-import { RequestManager } from "./request/RequestManager";
-import { QTTab, QTTabPageData, QTTabItem, QTWaterfallItem } from "@quicktvui/quicktvui3";
-import { Tab } from "../pages/home/build_data/tab/impl/Tab";
+import {IGlobalApi} from "./IGlobalApi";
+import {RequestManager} from "./request/RequestManager";
+import {
+  QTTab,
+  QTTabItem,
+  QTTabItemType,
+  QTTabPageData,
+  QTTabPageState,
+  QTWaterfallItem,
+  QTWaterfallSection,
+  QTWaterfallSectionType
+} from "@quicktvui/quicktvui3";
+import {Tab} from "../pages/home/build_data/tab/impl/Tab";
 import tabMockJson from "./home/mock/home_tab";
 import {
   buildTransferTabAdapter,
@@ -14,25 +23,13 @@ import tabPage0MockJson from "./home/mock/home_page0";
 import tabPage1MockJson from "./home/mock/home_page1";
 import tabPage2MockJson from "./home/mock/home_page2";
 import tabPage3MockJson from "./home/mock/home_page3";
-import { buildTransferTabContentAdapter } from "../pages/home/build_data/tab_content/TabContentTransferAdapter";
-import { ESApp } from "@extscreen/es3-vue";
-import { GlobalApiKey } from "./UseApi";
+import {
+  buildTransferTabContentAdapter
+} from "../pages/home/build_data/tab_content/TabContentTransferAdapter";
+import {ESApp} from "@extscreen/es3-vue";
+import {GlobalApiKey} from "./UseApi";
 import BuildConfig from "../build/BuildConfig";
-import {
-  filterContentUrl,
-  filterEntryUrl,
-  hotSearchUrl,
-  tabContentUrl,
-  tabListUrl,
-} from "./RequestUrl";
-import {
-  buildO2MTabContentData,
-  buildO2MTabData,
-  buildHomeShortVideoAdapter,
-  buildHomeMultilevelTabAdapter,
-  build4KWorldAdapter,
-  buildHomeShortVideo2Adapter
-} from "../pages/home/build_data/useTabData"
+import {filterContentUrl, filterEntryUrl, hotSearchUrl,} from "./RequestUrl";
 
 /*****
  ***************搜索 *********
@@ -49,15 +46,18 @@ import searchResultPageData from "./search/mock/search_result_page_data";
 import searchResultPageData2 from "./search/mock/search_result_page_data2";
 import searchRecommendResultData from "./search/mock/search_result_recommend_data";
 import SearchConfig from "../pages/search/build_data/SearchConfig";
-import { SearchCenter } from "../pages/search/build_data/impl/SearchCenter";
-import { SearchTab } from "../pages/search/build_data/impl/SearchTab";
-import { SearchResult } from "../pages/search/build_data/impl/SearchResult";
+import {SearchCenter} from "../pages/search/build_data/impl/SearchCenter";
+import {SearchTab} from "../pages/search/build_data/impl/SearchTab";
+import {SearchResult} from "../pages/search/build_data/impl/SearchResult";
 
 /***** *************** 短视频 **************/
-import { buildMultilevelTabItemAdapter, buildShortVideoItemAdapter } from "../pages/shortVideo/build_data/adapter";
-import { ShortVideoItem } from "../pages/shortVideo/build_data/interface";
+import {
+  buildMultilevelTabItemAdapter,
+  buildShortVideoItemAdapter
+} from "../pages/shortVideo/build_data/adapter";
 import shortVideoList from "./shortVideo/mock/short_video_data";
-import { leftExpand, leftTags } from "./filter/mock";
+import {leftExpand, leftTags} from "./filter/mock";
+import {buildQTTab} from "../pages/home/build_data/tab/TabAdapter";
 
 export function createGlobalApi(): IGlobalApi {
   let requestManager: RequestManager;
@@ -68,17 +68,65 @@ export function createGlobalApi(): IGlobalApi {
 
   function getTabList(): Promise<QTTab> {
     //使用本地数据
-    if (BuildConfig.useMockData) {
-      return getMockTabList();
+    const tabs: Array<QTTabItem> = []
+    const musicTab : QTTabItem = {
+      _id: 'music',
+      type: QTTabItemType.QT_TAB_ITEM_TYPE_DEFAULT,
+      text: '音乐',
+      titleSize: 36,
+      decoration: {}
     }
-    return requestManager.post(tabListUrl, {}).then((tabList: Array<any>) => {
-      return buildO2MTabData(tabList);
-    });
+
+    const video : QTTabItem = {
+      _id: 'video',
+      type: QTTabItemType.QT_TAB_ITEM_TYPE_DEFAULT,
+      text: '视频',
+      titleSize: 36,
+      decoration: { }
+    }
+
+    const image : QTTabItem = {
+      _id: 'image',
+      type: QTTabItemType.QT_TAB_ITEM_TYPE_DEFAULT,
+      text: '图片',
+      titleSize: 36,
+      decoration: { }
+    }
+    tabs.push(musicTab)
+    tabs.push(video)
+    tabs.push(image)
+    let tab = buildQTTab(1,1,tabs);
+    return Promise.resolve(tab);
   }
 
   function getMockTabList(): Promise<QTTab> {
     const tabs: Array<Tab> = tabMockJson as Array<Tab>;
     return Promise.resolve(buildTransferTabAdapter(tabs));
+  }
+
+  function getMockVideos() : Promise<Array<QTWaterfallItem>> {
+    let items : Array<QTWaterfallItem> = []
+    for(let i = 0; i < 20; i++) {
+      let item : QTWaterfallItem = {
+        _id: i.toString(),
+        type: 20000,
+        title: `视频名称第一季第${i+1}级1080p.mp4`,
+        subTitle: '2024/12/12',
+        videoUrl: 'http://www.w3school.com.cn/i/movie.mp4',
+        duration:500*1000,
+        progress:100000,
+        size:[392,392],
+        style:{
+          width:392,
+          height:392
+        },
+        decoration: {
+          left: i == 0 ? 0 : 40,
+        }
+      }
+      items.push(item)
+    }
+    return Promise.resolve(items)
   }
 
   function getTabContent(
@@ -87,38 +135,41 @@ export function createGlobalApi(): IGlobalApi {
     pageSize: number,
     tabPageIndex?: number
   ): Promise<QTTabPageData> {
-    if(tabId == 'short_video' && pageNo < 2) {
-      let tabPage = buildHomeShortVideoAdapter(tabId,tabPageIndex)
-      tabPage.data[0].itemList = buildShortVideoItemAdapter(shortVideoList)
-      return Promise.resolve(tabPage);
-    } else if (tabId === 'multilevelTab' && pageNo < 2) {
-      let tabPage = buildHomeMultilevelTabAdapter(tabId, tabPageIndex)
-      tabPage.data[0].itemList = buildMultilevelTabItemAdapter(shortVideoList.slice(0, 5))
-      return Promise.resolve(tabPage)
-    }else if(tabId === "4k_world" && pageNo < 2){
-      let tabPage = build4KWorldAdapter(tabId, tabPageIndex)
-      return Promise.resolve(tabPage)
-    }else if(tabId === 'short_video2' && pageNo < 2){
-      let tabPage = buildHomeShortVideo2Adapter(tabId,tabPageIndex)
-      tabPage.data[0].itemList = buildShortVideoItemAdapter(shortVideoList)
-      return Promise.resolve(tabPage);
+
+    let sections:QTWaterfallSection[] = []
+    let tabContentData: QTTabPageData = {
+      state: pageNo > 0 ?  QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE : QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE,
+      data:sections,
+      isEndPage : true,
+    };
+    if(pageNo > 1){
+      return  Promise.resolve(tabContentData);
     }
-    //此处可更换接口请求数据
-    if (BuildConfig.useMockData) {
-      return getMockTabContent(tabId, pageNo, tabPageIndex);
+    // client.searchFilesByType('music','mp3',1,10).then((res) => {
+    let historySection : QTWaterfallSection = {
+      _id: 'history',
+      title: '历史记录',
+      type: QTWaterfallSectionType.QT_WATERFALL_SECTION_TYPE_LIST,
+      itemList: [],
+      style:{
+        width: 1920,
+        height: 392+40+ 48,
+      }
     }
-    return requestManager
-      .post(tabContentUrl, {
-        data: tabId,
-        param: {
-          isSupportPage: 1,
-          pageNo: pageNo,
-          pageSize: pageSize,
-        },
-      })
-      .then((tabContent: any) => {
-        return buildO2MTabContentData(tabContent, pageNo, tabId, tabPageIndex);
-      });
+    sections.push(historySection)
+    console.log(`push historySection`)
+    getMockVideos().then((res) => {
+      console.log(`itemList historySection res length:${res.length}`)
+      historySection.itemList = res
+      return Promise.resolve(tabContentData);
+    }).catch((err) => {
+      let tabContentData: QTTabPageData = {
+        state: 0,
+        data:sections
+      };
+      return Promise.resolve(tabContentData);
+    })
+    return Promise.resolve(tabContentData)
   }
 
   function getMockTabContent(

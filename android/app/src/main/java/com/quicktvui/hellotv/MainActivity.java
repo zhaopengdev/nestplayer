@@ -5,8 +5,11 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.nestplayer.quicktv.ClientModule;
+
 import eskit.sdk.core.EsData;
 import eskit.sdk.core.EsManager;
+import eskit.sdk.support.module.es.ESModule;
 
 /**
  * <br>
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         //data.setCoverLayoutId(R.layout.my_custom_cover);
-
+        EsManager.get().registerModule(ClientModule.class.getName());
         // 第二步 启动
         EsManager.get().start(data);
     };
