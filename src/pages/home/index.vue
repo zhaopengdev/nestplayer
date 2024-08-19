@@ -6,7 +6,6 @@
         </top-btns-view>
       </template>
     </waterfall-tabs>
-
   </div>
 </template>
 

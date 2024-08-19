@@ -61,6 +61,7 @@
         <my-item-history :type="121" />
         <my-item-history-img :type="122" />
         <MyTemplates :focusable="false"/>
+        <video-item :type="20000"/>
       </template>
       <template v-slot:waterfall-list-item>
         <qt-poster :type="10001" :borderRadius="20" :rippleColor="'#157AFC'"
@@ -75,6 +76,7 @@
         <page-place-holder-item :type="3"/>
         <my-item-history :type="121" />
         <my-item-history-img :type="122" />
+        <video-item :type="20000"/>
       </template>
       <template v-slot:waterfall-vue-section>
         <!-- <loading :isFullScreen="true" :width="120" :height="120" /> -->
@@ -127,12 +129,14 @@ import MyTemplates from '../../my/MyTemplates.vue'
 import myDataManager from '../../my/index.ts'
 import shortVideoSection from "../../shortVideo/component/short_video_section.vue";
 import { useESRouter } from "@extscreen/es3-router"
+import VideoItem from "../../../components/nest/VideoItem.vue";
 
 const TAG = "WATERFALL-TABS"
 
 export default defineComponent({
   name: "waterfall-tabs",
   components: {
+    VideoItem,
     World4kSection,
     PageNoFrameItem,MyItemHistory,MyItemHistoryImg,MyTemplates,
     PagePlaceHolderItem, itemCellPlayer, bgPlayer, loading,

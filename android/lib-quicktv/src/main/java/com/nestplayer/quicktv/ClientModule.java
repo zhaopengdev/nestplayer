@@ -1,53 +1,62 @@
 package com.nestplayer.quicktv;
 
+import android.content.Context;
+
 import com.nestplayer.lib.entity.FileType;
 import com.nestplayer.lib.entity.NestFile;
-import com.tencent.mtt.hippy.HippyEngineContext;
-import com.tencent.mtt.hippy.annotation.HippyMethod;
-import com.tencent.mtt.hippy.annotation.HippyNativeModule;
-import com.tencent.mtt.hippy.common.HippyArray;
-import com.tencent.mtt.hippy.common.HippyMap;
-import com.tencent.mtt.hippy.modules.Promise;
-import com.tencent.mtt.hippy.modules.nativemodules.HippyNativeModuleBase;
+import com.nestplayer.lib.inter.INestConnectionService;
+import com.nestplayer.lib.smb.SMBNestConnectionService;
+import com.nestplayer.lib.utils.LocalNetworkUtil;
 
+import java.net.SocketException;
 import java.util.Date;
+import java.util.concurrent.Executors;
 
-@HippyNativeModule(name = "ClientModule")
-public class ClientModule extends HippyNativeModuleBase {
+import eskit.sdk.support.EsPromise;
+import eskit.sdk.support.args.EsArray;
+import eskit.sdk.support.module.IEsModule;
+import android.util.Log;
+
+public class ClientModule implements IEsModule {
+    INestConnectionService service = new SMBNestConnectionService();
+    public static final String TAG = "ClientModule";
 
 
-    public ClientModule(HippyEngineContext hippyEngineContext) {
-        super(hippyEngineContext);
+    public ClientModule() {
+        super();
+        Log.i(TAG,"ClientModule create");
     }
-
 
     /**
      * 链接nas
      * @param params
      * @param promise
      */
-    @HippyMethod(name="connectServe")
-    public void connectServe(HippyMap params, Promise promise){
+    public void connectServer(EsArray params, EsPromise promise){
+        Log.i(TAG,"connectServer params: " + params);
+        //service = new SMBNestConnectionService();
+        String protocol = params.getString(0);
 
-        String protocol = params.getString("protocol");
+        String ip = params.getString(1);
+//        String port = params.getString(2);
+        String username = params.getString(2);
+        String password = params.getString(3);
 
-        String ip = params.getString("ip");
-        String port = params.getString("port");
-        String username = params.getString("username");
-        String password = params.getString("password");
-
-        switch (protocol){
-            case "smb":
-
-                break;
+        if(!"smb".equals(protocol)){
+            promise.reject("不支持的协议");
+            return;
         }
-        boolean success = true;
-        if(success){
-            promise.resolve("");
-        }else{
-            promise.reject("链接失败");
-        }
-
+        Executors.newCachedThreadPool().submit(() -> {
+            Log.i(TAG,"connectServer start open");
+            boolean success = service.open(ip,username,password);
+            if(success){
+                Log.i(TAG,"connectServer  open success");
+                promise.resolve("");
+            }else{
+                Log.e(TAG,"connectServer  open failed");
+                promise.reject("链接失败");
+            }
+        });
     }
 
     /**
@@ -55,10 +64,9 @@ public class ClientModule extends HippyNativeModuleBase {
      * @param path
      * @param promise
      */
-    @HippyMethod(name="getFiles")
-    public void getFiles(String path, Promise promise){
+    public void getFiles(String path, EsPromise promise){
 
-        HippyArray array = new HippyArray();
+        EsArray array = new EsArray();
 
         int fileCount = 100;
         for(int i = 0; i < fileCount; i ++){
@@ -70,6 +78,18 @@ public class ClientModule extends HippyNativeModuleBase {
             array.pushMap(ClientUtils.nestFileToHippyJson(file));
         }
         promise.resolve(array);
+    }
+
+    public void getLocalIP(EsPromise promise){
+        Log.i(TAG,"getLocalIP called");
+        try {
+            String s = LocalNetworkUtil.getLocalIPAddress();
+            Log.i(TAG,"getLocalIP return " + s);
+            promise.resolve(s);
+        } catch (SocketException e) {
+           // throw new RuntimeException(e);
+            promise.reject(e.getMessage());
+        }
 
     }
 
@@ -82,10 +102,9 @@ public class ClientModule extends HippyNativeModuleBase {
      * @param pageSize
      * @param promise
      */
-    @HippyMethod(name="searchFilesByType")
-    public void searchFiles(String path,String type,int page,int pageSize, Promise promise){
+    public void searchFilesByType(String path,String type,int page,int pageSize, EsPromise promise){
 
-        HippyArray array = new HippyArray();
+        EsArray array = new EsArray();
 
         int fileCount = 100;
         for(int i = 0; i < fileCount; i ++){
@@ -101,4 +120,13 @@ public class ClientModule extends HippyNativeModuleBase {
     }
 
 
+    @Override
+    public void init(Context context) {
+        Log.i(TAG,"ClientModule init context: " + context);
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }
