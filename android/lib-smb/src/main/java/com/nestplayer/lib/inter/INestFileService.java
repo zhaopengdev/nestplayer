@@ -54,4 +54,12 @@ public interface INestFileService {
      * @return 文件名称集合
      */
     List<NestFile> search(String str);
+
+    /**
+     * 根据后缀名搜索文件
+     *
+     * @param extNameList 后缀名集合
+     * @return 列出所有文件
+     */
+    List<NestFile> searchByFileExtName(List<String> extNameList);
 }

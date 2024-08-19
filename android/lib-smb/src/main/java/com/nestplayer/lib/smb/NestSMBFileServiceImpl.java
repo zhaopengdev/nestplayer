@@ -124,8 +124,24 @@ public class NestSMBFileServiceImpl implements INestFileService {
                 }
             }
             for (Map.Entry<String, NestFile> entry : fileMap.entrySet()) {
-                if (entry.getValue().getFileName().toLowerCase().contains(str.toLowerCase())) {
+                if (str == null || str.isEmpty() || entry.getValue().getFileName().toLowerCase().contains(str.toLowerCase())) {
                     fileList.add(entry.getValue());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return fileList;
+    }
+
+    @Override
+    public List<NestFile> searchByFileExtName(List<String> extNameList) {
+        List<NestFile> fileList = new ArrayList<>();
+        try {
+            List<NestFile> search = this.search("");
+            for (NestFile nestFile : search) {
+                if (extNameList.contains(nestFile.getExtName())) {
+                    fileList.add(nestFile);
                 }
             }
         } catch (Exception e) {
