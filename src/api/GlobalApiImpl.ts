@@ -70,9 +70,9 @@ export function createGlobalApi(): IGlobalApi {
     //使用本地数据
     const tabs: Array<QTTabItem> = []
     const musicTab : QTTabItem = {
-      _id: 'music',
+      _id: 'fav',
       type: QTTabItemType.QT_TAB_ITEM_TYPE_DEFAULT,
-      text: '音乐',
+      text: '收藏',
       titleSize: 36,
       decoration: {}
     }
@@ -94,7 +94,7 @@ export function createGlobalApi(): IGlobalApi {
     }
     tabs.push(musicTab)
     tabs.push(video)
-    tabs.push(image)
+    // tabs.push(image)
     let tab = buildQTTab(1,1,tabs);
     return Promise.resolve(tab);
   }
@@ -104,13 +104,13 @@ export function createGlobalApi(): IGlobalApi {
     return Promise.resolve(buildTransferTabAdapter(tabs));
   }
 
-  function getMockVideos() : Promise<Array<QTWaterfallItem>> {
+  function getHistoryItems(): Array<QTWaterfallItem> {
     let items : Array<QTWaterfallItem> = []
-    for(let i = 0; i < 20; i++) {
+    for(let i = 0; i < 4; i++) {
       let item : QTWaterfallItem = {
         _id: i.toString(),
         type: 20000,
-        title: `视频名称第一季第${i+1}级1080p.mp4`,
+        title: `视频名称第一季第${i+1}集1080p.mp4`,
         subTitle: '2024/12/12',
         videoUrl: 'http://www.w3school.com.cn/i/movie.mp4',
         duration:500*1000,
@@ -122,6 +122,31 @@ export function createGlobalApi(): IGlobalApi {
         },
         decoration: {
           left: i == 0 ? 0 : 40,
+        }
+      }
+      items.push(item)
+    }
+    return items
+  }
+
+  function getMockVideos() : Promise<Array<QTWaterfallItem>> {
+    let items : Array<QTWaterfallItem> = []
+    for(let i = 0; i < 100; i++) {
+      let item : QTWaterfallItem = {
+        _id: i.toString(),
+        type: 20000,
+        title: `视频名称第一季第${i+1}集1080p.mp4`,
+        subTitle: '2024/12/12',
+        videoUrl: 'http://www.w3school.com.cn/i/movie.mp4',
+        duration:500*1000,
+        progress:100000,
+        size:[392,392],
+        style:{
+          width:392,
+          height:392
+        },
+        decoration: {
+          right:40,
         }
       }
       items.push(item)
@@ -141,6 +166,7 @@ export function createGlobalApi(): IGlobalApi {
       state: pageNo > 0 ?  QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE : QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE,
       data:sections,
       isEndPage : true,
+      disableScrollOnFirstScreen:true,
     };
     if(pageNo > 1){
       return  Promise.resolve(tabContentData);
@@ -149,18 +175,36 @@ export function createGlobalApi(): IGlobalApi {
     let historySection : QTWaterfallSection = {
       _id: 'history',
       title: '历史记录',
+      titleStyle:{
+        width: 1000,
+        height:60
+      },
       type: QTWaterfallSectionType.QT_WATERFALL_SECTION_TYPE_LIST,
-      itemList: [],
+      itemList: getHistoryItems(),
+      decoration:{
+        top: 560,
+        left:116
+      },
       style:{
         width: 1920,
-        height: 392+40+ 48,
+        height: 392+48 + 60,
       }
     }
     sections.push(historySection)
     console.log(`push historySection`)
+
     getMockVideos().then((res) => {
       console.log(`itemList historySection res length:${res.length}`)
-      historySection.itemList = res
+      //historySection.itemList = res
+      let gridSectionList = buildGridSectionList(res,4)
+      gridSectionList[0].decoration!.bottom = gridSectionList[0].decoration!.bottom! + 40;
+      gridSectionList[0].decoration!.top = 48;
+      gridSectionList[0].titleStyle = {
+        width: 1000,
+        height:60
+      }
+      gridSectionList[0].title = '全部视频'
+      sections.push(...gridSectionList)
       return Promise.resolve(tabContentData);
     }).catch((err) => {
       let tabContentData: QTTabPageData = {
@@ -170,6 +214,35 @@ export function createGlobalApi(): IGlobalApi {
       return Promise.resolve(tabContentData);
     })
     return Promise.resolve(tabContentData)
+  }
+
+  function buildGridSectionList(items:Array<QTWaterfallItem>,span :number): Array<QTWaterfallSection> {
+      let count = items.length % span == 0 ? items.length / span : items.length / span + 1;
+      let sections = new Array<QTWaterfallSection>();
+      let start = 0
+      for(let i = 0; i < count; i++) {
+          let section : QTWaterfallSection =  {
+              itemList: [],
+              style:{
+                width: 1920,
+                height: 392,
+              },
+              decoration:{
+                bottom:40,
+                left:116
+              },
+              type: QTWaterfallSectionType.QT_WATERFALL_SECTION_TYPE_LIST
+            }
+            sections.push(section)
+           for(let j = 0; j < span;j ++){
+             let index = j + start;
+             if(index < items.length ){
+               section.itemList.push(items[index]);
+             }
+           }
+          start += span;
+      }
+      return sections;
   }
 
   function getMockTabContent(
