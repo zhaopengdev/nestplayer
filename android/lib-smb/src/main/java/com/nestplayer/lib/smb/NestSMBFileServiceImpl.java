@@ -5,15 +5,15 @@ import com.nestplayer.lib.entity.NestFile;
 import com.nestplayer.lib.inter.INestFileService;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLStreamHandler;
+import java.util.*;
 import java.util.function.Function;
 
 import jcifs.CIFSContext;
+import jcifs.Credentials;
+import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 /**
@@ -23,10 +23,14 @@ public class NestSMBFileServiceImpl implements INestFileService {
     CIFSContext authContext;
     SmbFile smbRoot;
     private Map<String, NestFile> fileMap = null;
+    private final String username;
+    private final String password;
 
-    public NestSMBFileServiceImpl(CIFSContext authContext, SmbFile smbRoot) {
+    public NestSMBFileServiceImpl(CIFSContext authContext, SmbFile smbRoot, String username, String password) {
         this.authContext = authContext;
         this.smbRoot = smbRoot;
+        this.username = username;
+        this.password = password;
     }
 
     @Override
@@ -35,9 +39,27 @@ public class NestSMBFileServiceImpl implements INestFileService {
         try {
             // 列出所有共享目录
             SmbFile[] shares = smbRoot.listFiles();
-            for (SmbFile share : shares) {
-                System.out.println("Share: " + share.getName());
-                this.listAllFilesAndDirectories(share, list, false); // 递归列出文件夹和文件
+            if (shares == null || shares.length == 0) {
+                return list;
+            }
+            List<SmbFile> smbFileList = new ArrayList<>();
+            for (SmbFile smbFile : shares) {
+                if (Objects.equals("IPC$/", smbFile.getName()) || Objects.equals("print$/", smbFile.getName())) {
+                    continue;
+                }
+                smbFileList.add(smbFile);
+            }
+
+            //只有一个共享目录 列出所有文件
+            if (smbFileList.size() == 1) {
+                for (SmbFile share : smbFileList) {
+                    this.listAllFilesAndDirectories(share, list, false); // 递归列出文件夹和文件
+                }
+            } else {
+                //列出所有共享文件
+                for (SmbFile file : smbFileList) {
+                    this.convertFileAddList(list, false, file);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,7 +137,6 @@ public class NestSMBFileServiceImpl implements INestFileService {
                 SmbFile[] shares = smbRoot.listFiles();
                 List<NestFile> list = new ArrayList<>();
                 for (SmbFile share : shares) {
-                    System.out.println("Share: " + share.getName());
                     this.listAllFilesAndDirectories(share, list, true); // 递归列出文件夹和文件
                 }
                 fileMap = new HashMap<>();
@@ -163,31 +184,35 @@ public class NestSMBFileServiceImpl implements INestFileService {
                 SmbFile[] files = directory.listFiles();
                 if (files != null) {
                     for (SmbFile file : files) {
-                        if (file.isDirectory()) {
-                            System.out.println("Directory: " + file.getPath());
-                            NestFile nestFile = new NestFile();
-                            nestFile.setType(FileType.DIRECTORY);
-                            nestFile.setFileName(file.getName());
-                            nestFile.setSize(file.length());
-                            nestFile.setPath(file.getPath());
-                            list.add(nestFile);
-                            if (recursion) {
-                                this.listAllFilesAndDirectories(file, list, true); // 递归调用
-                            }
-                        } else {
-                            System.out.println("File: " + file.getPath());
-                            NestFile nestFile = new NestFile();
-                            nestFile.setType(FileType.FILE);
-                            nestFile.setFileName(file.getName());
-                            nestFile.setSize(file.length());
-                            nestFile.setPath(file.getPath());
-                            list.add(nestFile);
-                        }
+                        this.convertFileAddList(list, recursion, file);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void convertFileAddList(List<NestFile> list, boolean recursion, SmbFile file) throws SmbException {
+        URL url = file.getURL();
+        String urlFile = url.getFile();
+        String host = url.getHost();
+        String protocol = url.getProtocol();
+        NestFile nestFile = new NestFile();
+        nestFile.setPath(urlFile);
+        nestFile.setFileName(file.getName());
+        nestFile.setSize(file.length());
+        nestFile.setUrl(this.convertSMBURL(protocol, host, urlFile));
+
+        if (file.isDirectory()) {
+            nestFile.setType(FileType.DIRECTORY);
+            list.add(nestFile);
+            if (recursion) {
+                this.listAllFilesAndDirectories(file, list, true); // 递归调用
+            }
+        } else {
+            nestFile.setType(FileType.getTypeEnum(file.getName()));
+            list.add(nestFile);
         }
     }
 
@@ -208,5 +233,10 @@ public class NestSMBFileServiceImpl implements INestFileService {
             e.printStackTrace();
         }
         return list;
+    }
+
+    private String convertSMBURL(String protocol, String host, String urlFile) {
+        //smb://userName:passWord@host/path/folderName
+        return String.format("%s://%s:%s@%s%s", protocol, username, password, host, urlFile);
     }
 }

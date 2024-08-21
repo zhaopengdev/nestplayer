@@ -1,12 +1,33 @@
 package com.nestplayer.lib.entity;
 
 public class NestFile {
-
+    /**
+     * 文件名称
+     */
     private String fileName;
+    /**
+     * 文件类型
+     */
     private FileType type;
+    /**
+     * 创建时间
+     */
     private long createTime;
+    /**
+     * 文件大小
+     */
     private long size;
+    /**
+     * 文件路径
+     * 例如: /data/opt/file.name
+     */
     private String path;
+    /**
+     * 文件链接地址
+     * smb://username@password:host/a/b/c
+     * ftp://username@password:host/a/b/c
+     */
+    private String url;
 
 
     public String getFileName() {
@@ -75,4 +96,11 @@ public class NestFile {
         }
     }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 }

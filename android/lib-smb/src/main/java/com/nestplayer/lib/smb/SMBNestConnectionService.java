@@ -68,7 +68,8 @@ public class SMBNestConnectionService implements INestConnectionService {
             String smbUrl = "smb://" + ip + "/";
             // 连接到服务器
             smbRoot = new SmbFile(smbUrl, authContext);
-            nestFileService = new NestSMBFileServiceImpl(authContext, smbRoot);
+            nestFileService = new NestSMBFileServiceImpl(authContext, smbRoot,userName,password);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
