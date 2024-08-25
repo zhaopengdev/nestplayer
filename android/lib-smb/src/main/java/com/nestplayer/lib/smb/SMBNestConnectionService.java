@@ -81,8 +81,8 @@ public class SMBNestConnectionService implements INestConnectionService {
     @Override
     public void close() {
         try {
-            authContext.close();
             smbRoot.close();
+            authContext.close();
         } catch (CIFSException e) {
             throw new RuntimeException(e);
         }

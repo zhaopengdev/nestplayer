@@ -11,31 +11,34 @@ import java.util.Objects;
  * FTP SMB 实现此抽象类
  */
 public abstract class FileSearchPagination {
-    //排序规则 -1 倒序 0 默认 1 正序
-    private int order = 0;
-    //排序字段 date或name  默认为data
-    private String orderBy = "date";
 
+    //页容量
     private Integer PAGE_SIZE;
-
+    //后缀名列表
     private List<String> EXT_LIST;
-
+    // 文件名
     private String FILE_NAME;
-
-    private String SEARCH_TYPE;
-
-    private Integer DEPTH = 0;
-
+    // 路径堆栈
     private List<String> PATH_STACK;
-
+    //标记位
     private String MARK;
-
+    //返回结果
     private List<NestFile> RESULT;
-
+    //标记位是否生效 true生效 如果配到标记位则置为失效 false
     private boolean FROM_MARK;
 
+    /**
+     * 搜索类型
+     * 名称搜索： #{@link FileSearchPagination#TYPE_BY_NAME}
+     * 后缀名搜索： #{@link FileSearchPagination#TYPE_BY_EXT_LIST}
+     */
+    private String SEARCH_TYPE;
+
     private static final String TYPE_BY_NAME = "NAME";
+
     private static final String TYPE_BY_EXT_LIST = "EXT";
+
+
 
     /**
      * 获取当前文件夹所有文件
@@ -46,30 +49,39 @@ public abstract class FileSearchPagination {
     protected abstract List<NestFile> getDirFileList(String dirPath);
 
 
+    /**
+     * 根据文件名搜索
+     *
+     * @param fileName 文件名
+     * @param mark     标记位 上一次返回的文件最后一个
+     * @param pageSize 页容量
+     * @return 文件列表
+     */
     protected List<NestFile> searchAbs(String fileName, String mark, int pageSize) {
-        List<NestFile> result = new ArrayList<>();
+        RESULT = new ArrayList<>();
         PAGE_SIZE = pageSize <= 0 ? 10 : pageSize;
         FILE_NAME = fileName;
-        DEPTH = 0;
         SEARCH_TYPE = TYPE_BY_NAME;
         MARK = mark;
         PATH_STACK = this.getPathStack(mark);
-        this.searchAndPaginate(mark, result, false);
-        return result;
-
+        List<NestFile> files = this.getDirFileList(""); //获取根目录
+        FROM_MARK = (MARK != null && !MARK.isEmpty());//是否从标记位开始恢复搜索
+        this.searchAndPaginate(files, 0);
+        return RESULT;
     }
 
     /**
-     * @param extList
+     * 根据后缀名搜索
+     *
+     * @param extList  后缀名集合
      * @param mark     标记位，上一次返回的文件最后一个
-     * @param pageSize
-     * @return
+     * @param pageSize 页大小
+     * @return 文件列表
      */
     protected List<NestFile> searchAbs(List<String> extList, String mark, int pageSize) {
         RESULT = new ArrayList<>();
-        PAGE_SIZE = pageSize;
+        PAGE_SIZE = pageSize <= 0 ? 10 : pageSize;
         EXT_LIST = extList;
-        DEPTH = 0;
         SEARCH_TYPE = TYPE_BY_EXT_LIST;
         MARK = mark;
         PATH_STACK = this.getPathStack(mark);
@@ -84,6 +96,7 @@ public abstract class FileSearchPagination {
      * 分页搜索 深度优先
      *
      * @param files 返回结果
+     * @param depth 检索文件深度
      */
     private void searchAndPaginate(List<NestFile> files, int depth) {
         if (files == null || files.isEmpty()) {
@@ -109,7 +122,9 @@ public abstract class FileSearchPagination {
             }
             // 如果是目录，递归搜索子目录
             if (isDir) {
+                //获取下级文件内容
                 List<NestFile> childFiles = this.getDirFileList(file.getPath());
+                //递归搜索
                 this.searchAndPaginate(childFiles, depth + 1);
             }
             // 如果是文件且符合条件，记录
@@ -124,72 +139,6 @@ public abstract class FileSearchPagination {
 
         }
     }
-
-    /**
-     * 分页搜索
-     *
-     * @param mark   标记位，上一次返回的文件最后一个
-     * @param result 返回结果
-     * @param isUp   true 向上查找 false 向下或同级查找
-     */
-    private void searchAndPaginate(String mark, List<NestFile> result, boolean isUp) {
-        String dirPath;
-        //如果是空文件 则查询根目录
-        if (mark == null || mark.isEmpty()) {
-            dirPath = "";
-        } else if (mark.endsWith("/") && !isUp) {
-            dirPath = mark;
-        } else {
-            dirPath = this.getParentPath(mark);
-        }
-        boolean resumeFromMark = (mark != null && !mark.isEmpty() && mark.startsWith(dirPath) && !mark.equals(dirPath));  // 是否从标记位开始恢复搜索
-        List<NestFile> files = this.getDirFileList(dirPath);
-        if (files == null || files.isEmpty()) {
-            return;  // 如果目录为空，结束递归
-        }
-
-        for (int i = 0; i < files.size() && result.size() < PAGE_SIZE; i++) {
-            NestFile file = files.get(i);
-            // 如果上次有标记位，则跳过标记位之前的文件
-            if (resumeFromMark) {
-                if (file.getPath().equals(mark)) {
-                    resumeFromMark = false;  // 从标记位恢复
-                }
-                continue;
-            }
-            mark = file.getPath();
-            // 如果是目录，递归搜索子目录
-            if (file.isDirectory()) {
-                this.searchAndPaginate(mark, result, false);
-            }
-            // 如果是文件且符合条件，记录
-            else {
-                if ((Objects.equals(SEARCH_TYPE, TYPE_BY_EXT_LIST) && EXT_LIST.contains(file.getExtName())) || (Objects.equals(SEARCH_TYPE, TYPE_BY_NAME) && file.getExtName().contains(FILE_NAME))) {
-                    result.add(file);
-                    if (result.size() >= PAGE_SIZE) {
-                        return;
-                    }
-                }
-            }
-        }
-        if (result.size() >= PAGE_SIZE) {
-            return;
-        }
-        // 如果当前目录已遍历完毕，返回上层继续搜索  需要转换两次第一次是当前文件夹例如 /a/b/c/d.mp4  遍历完成后 需要将 /a/b/ 传递给递归
-        String parentPath = this.getParentPath(mark);
-        if (parentPath == null || parentPath.isEmpty()) return;
-        this.searchAndPaginate(parentPath, result, true);
-    }
-
-    private String getParentPath(String mark) {
-        if (mark == null || mark.isEmpty()) return null;
-        if (mark.endsWith("/")) mark = mark.substring(0, mark.length() - 1);
-        if (!mark.contains("/")) return null;
-        String sub = mark.substring(0, mark.lastIndexOf("/"));
-        if (sub.isEmpty()) return ""; //代表根目录
-        return sub + "/";
-    }
-
 
     private List<String> getPathStack(String path) {
         List<String> result = new ArrayList<>();
