@@ -57,7 +57,6 @@ public class SMBNestConnectionService implements INestConnectionService {
      * @param password 密码
      * @return 链接是否成功
      */
-
     @Override
     public NestResult<Boolean> open(String ip, String userName, String password) {
         try {
@@ -77,6 +76,7 @@ public class SMBNestConnectionService implements INestConnectionService {
         }
         return NestResult.error("连接错误，请检查链接地址、用户名和密码");
     }
+
 
     @Override
     public void close() {

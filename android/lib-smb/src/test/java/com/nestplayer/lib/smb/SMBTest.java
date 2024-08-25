@@ -14,13 +14,17 @@ public class SMBTest {
 
     @Test
     public void search() {
-        List<String> stringList = Arrays.asList("mp4");
 
         INestConnectionService service = new SMBNestConnectionService();
-        NestResult<Boolean> result = service.open("192.168.0.104", "lanzhenkai", "lanlove61599616L");
-
+        NestResult<Boolean> result = service.open("192.168.80.51", "lanzhenkai", "lanzhenkai");
+        if (!result.isSuccess()) {
+            System.out.println(result.getMessage());
+            return;
+        }
         INestFileService fileService = service.getNestFileService();
-        List<NestFile> nestFiles = fileService.searchByFileExtName(stringList, "/homes/lanzhenkai/public/视频/教学/05.分布式专题（五）/2019-5-21（94）-使用缓存问题之缓存击穿解决方案&redis实现分布式-太白/缓存击穿和分布式锁.mp4", 20);
+
+        List<String> stringList = Arrays.asList("mp4", "rmvb");
+        List<NestFile> nestFiles = fileService.search(stringList, "/asedq/lanzhenkai/public/视频/教学/05.分布式专题（五）/2019-5-21（94）-使用缓存问题之缓存击穿解决方案&redis实现分布式-太白/缓存击穿和分布式锁.mp4", 20);
 
         for (NestFile nestFile : nestFiles) {
             System.out.println(nestFile.getPath());

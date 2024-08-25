@@ -48,13 +48,21 @@ public interface INestFileService {
     List<String> getFileNameList(String path);
 
     /**
-     * 搜索
+     * 根据名称搜索
      *
      * @param str 文件名称 首字母 后缀名
-     * @return 文件名称集合
+     * @return 文件列表
      */
     List<NestFile> search(String str);
 
+    /**
+     * 根据名称搜索
+     *
+     * @param str      搜索内容
+     * @param lastPath 上一次返回值最后一个文件路径 NestFile.path  如果为 null 或者 空 则从根目录开始查询
+     * @param pageSize 页大小
+     * @return 文件列表
+     */
     List<NestFile> search(String str, String lastPath, Integer pageSize);
 
     /**
@@ -63,7 +71,15 @@ public interface INestFileService {
      * @param extNameList 后缀名集合
      * @return 列出所有文件
      */
-    List<NestFile> searchByFileExtName(List<String> extNameList);
+    List<NestFile> search(List<String> extNameList);
 
-    List<NestFile> searchByFileExtName(List<String> extNameList, String lastPath, Integer pageSize);
+    /**
+     * 根据后缀名搜索文件
+     *
+     * @param extNameList 后缀名集合
+     * @param lastPath    上一次返回值最后一个文件路径 NestFile.path  如果为 null 或者 空 则从根目录开始查询
+     * @param pageSize    页大小
+     * @return 文件列表
+     */
+    List<NestFile> search(List<String> extNameList, String lastPath, Integer pageSize);
 }

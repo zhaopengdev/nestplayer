@@ -139,12 +139,12 @@ public class SMBNestFileServiceImpl extends FileSearchPagination implements INes
     }
 
     @Override
-    public List<NestFile> searchByFileExtName(List<String> extNameList) {
+    public List<NestFile> search(List<String> extNameList) {
         return this.searchAbs(extNameList, null, 10);
     }
 
     @Override
-    public List<NestFile> searchByFileExtName(List<String> extNameList, String lastPath, Integer pageSize) {
+    public List<NestFile> search(List<String> extNameList, String lastPath, Integer pageSize) {
         return this.searchAbs(extNameList, lastPath, pageSize);
     }
 
