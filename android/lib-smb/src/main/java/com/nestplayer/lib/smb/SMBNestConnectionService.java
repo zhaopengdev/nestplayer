@@ -2,6 +2,7 @@ package com.nestplayer.lib.smb;
 
 import com.nestplayer.lib.inter.INestConnectionService;
 import com.nestplayer.lib.inter.INestFileService;
+import com.nestplayer.lib.result.NestResult;
 import com.nestplayer.lib.utils.LocalNetworkUtil;
 
 import java.util.Collections;
@@ -58,7 +59,7 @@ public class SMBNestConnectionService implements INestConnectionService {
      */
 
     @Override
-    public boolean open(String ip, String userName, String password) {
+    public NestResult<Boolean> open(String ip, String userName, String password) {
         try {
             // 使用默认配置创建 CIFS 上下文
             CIFSContext baseContext = SingletonContext.getInstance();
@@ -68,12 +69,13 @@ public class SMBNestConnectionService implements INestConnectionService {
             String smbUrl = "smb://" + ip + "/";
             // 连接到服务器
             smbRoot = new SmbFile(smbUrl, authContext);
-            nestFileService = new NestSMBFileServiceImpl(authContext, smbRoot,userName,password);
-            return true;
+            smbRoot.connect();
+            nestFileService = new SMBNestFileServiceImpl(authContext, smbRoot, userName, password, ip);
+            return NestResult.success(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return NestResult.error("连接错误，请检查链接地址、用户名和密码");
     }
 
     @Override

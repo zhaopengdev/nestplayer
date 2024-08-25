@@ -1,5 +1,7 @@
 package com.nestplayer.lib.inter;
 
+import com.nestplayer.lib.result.NestResult;
+
 import java.util.List;
 
 /**
@@ -17,7 +19,7 @@ public interface INestConnectionService {
      * @param userName 用户名
      * @param password 密码
      */
-    boolean open(String ip, String userName, String password);
+    NestResult<Boolean> open(String ip, String userName, String password);
 
     /**
      * 关闭连接

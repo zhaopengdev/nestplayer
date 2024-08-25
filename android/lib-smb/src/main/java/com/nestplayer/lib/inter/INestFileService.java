@@ -55,6 +55,8 @@ public interface INestFileService {
      */
     List<NestFile> search(String str);
 
+    List<NestFile> search(String str, String lastPath, Integer pageSize);
+
     /**
      * 根据后缀名搜索文件
      *
@@ -62,4 +64,6 @@ public interface INestFileService {
      * @return 列出所有文件
      */
     List<NestFile> searchByFileExtName(List<String> extNameList);
+
+    List<NestFile> searchByFileExtName(List<String> extNameList, String lastPath, Integer pageSize);
 }

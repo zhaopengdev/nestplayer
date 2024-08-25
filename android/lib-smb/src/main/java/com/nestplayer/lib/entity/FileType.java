@@ -47,8 +47,11 @@ public enum FileType {
     public static FileType getTypeEnum(String fullName) {
         if (fullName != null && !fullName.isEmpty()) {
             String lowerCase = fullName.toLowerCase();
-            for (FileType value : values()) {
-                for (String name : value.getDefaultExtName()) {
+            FileType[] values = values();
+            for (FileType value : values) {
+                String[] extList = value.getDefaultExtName();
+                if (extList == null) continue;
+                for (String name : extList) {
                     if (lowerCase.endsWith("." + name)) {
                         return value;
                     }

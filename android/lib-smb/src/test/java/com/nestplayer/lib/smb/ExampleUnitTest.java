@@ -15,4 +15,14 @@ public class ExampleUnitTest {
         assertEquals(4, 2 + 2);
         System.out.println("123--123");
     }
+
+    @Test
+    public void test(){
+        String filePath = "/data/opt/videos/1942.mp4";
+
+        // 使用字符串操作获取上一级文件夹
+        String parentDirectory = filePath.substring(0, filePath.lastIndexOf("/")+1);
+
+        System.out.println("Parent Directory: " + parentDirectory );
+    }
 }

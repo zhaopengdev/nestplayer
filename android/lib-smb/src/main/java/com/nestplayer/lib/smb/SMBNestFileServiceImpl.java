@@ -2,35 +2,32 @@ package com.nestplayer.lib.smb;
 
 import com.nestplayer.lib.entity.FileType;
 import com.nestplayer.lib.entity.NestFile;
+import com.nestplayer.lib.inter.FileSearchPagination;
 import com.nestplayer.lib.inter.INestFileService;
 
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLStreamHandler;
 import java.util.*;
-import java.util.function.Function;
 
 import jcifs.CIFSContext;
-import jcifs.Credentials;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 /**
  * SMB 文件
  */
-public class NestSMBFileServiceImpl implements INestFileService {
+public class SMBNestFileServiceImpl extends FileSearchPagination implements INestFileService {
     CIFSContext authContext;
     SmbFile smbRoot;
-    private Map<String, NestFile> fileMap = null;
     private final String username;
     private final String password;
+    private final String host;
 
-    public NestSMBFileServiceImpl(CIFSContext authContext, SmbFile smbRoot, String username, String password) {
+    public SMBNestFileServiceImpl(CIFSContext authContext, SmbFile smbRoot, String username, String password, String host) {
         this.authContext = authContext;
         this.smbRoot = smbRoot;
         this.username = username;
         this.password = password;
+        this.host = host;
     }
 
     @Override
@@ -94,7 +91,9 @@ public class NestSMBFileServiceImpl implements INestFileService {
             }
             // 构建上一级目录路径
             String parentPath = currentDir.substring(0, lastSlashIndex);
-            SmbFile smbFile = new SmbFile(parentPath, authContext);
+
+            SmbFile smbFile = this.createSmbFile(parentPath);
+            if (smbFile == null) return list;
             this.listAllFilesAndDirectories(smbFile, list, false); // 列出文件夹和文件
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,7 +115,8 @@ public class NestSMBFileServiceImpl implements INestFileService {
     public List<String> getFileNameList(String path) {
         List<String> list = new ArrayList<>();
         try {
-            SmbFile smbFile = new SmbFile(path, authContext);
+            SmbFile smbFile = this.createSmbFile(path);
+            if (smbFile == null) return list;
             List<NestFile> fileList = new ArrayList<>();
             this.listAllFilesAndDirectories(smbFile, fileList, false); // 列出文件夹和文件
             for (NestFile nestFile : fileList) {
@@ -130,45 +130,30 @@ public class NestSMBFileServiceImpl implements INestFileService {
 
     @Override
     public List<NestFile> search(String str) {
-        List<NestFile> fileList = new ArrayList<>();
-        try {
-            if (fileMap == null) {
-                // 列出所有共享目录
-                SmbFile[] shares = smbRoot.listFiles();
-                List<NestFile> list = new ArrayList<>();
-                for (SmbFile share : shares) {
-                    this.listAllFilesAndDirectories(share, list, true); // 递归列出文件夹和文件
-                }
-                fileMap = new HashMap<>();
-                for (NestFile nestFile : list) {
-                    fileMap.put(nestFile.getPath(), nestFile);
-                }
-            }
-            for (Map.Entry<String, NestFile> entry : fileMap.entrySet()) {
-                if (str == null || str.isEmpty() || entry.getValue().getFileName().toLowerCase().contains(str.toLowerCase())) {
-                    fileList.add(entry.getValue());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return fileList;
+        return this.searchAbs(str, null, 10);
+    }
+
+    @Override
+    public List<NestFile> search(String str, String lastPath, Integer pageSize) {
+        return this.searchAbs(str, lastPath, pageSize);
     }
 
     @Override
     public List<NestFile> searchByFileExtName(List<String> extNameList) {
-        List<NestFile> fileList = new ArrayList<>();
-        try {
-            List<NestFile> search = this.search("");
-            for (NestFile nestFile : search) {
-                if (extNameList.contains(nestFile.getExtName())) {
-                    fileList.add(nestFile);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        return this.searchAbs(extNameList, null, 10);
+    }
+
+    @Override
+    public List<NestFile> searchByFileExtName(List<String> extNameList, String lastPath, Integer pageSize) {
+        return this.searchAbs(extNameList, lastPath, pageSize);
+    }
+
+    @Override
+    protected List<NestFile> getDirFileList(String dirPath) {
+        if (dirPath == null || dirPath.isEmpty()) {
+            return this.rootDir();
         }
-        return fileList;
+        return this.orderList(dirPath, 1, Comparator.comparing(NestFile::getCreateTime));
     }
 
     /**
@@ -219,7 +204,8 @@ public class NestSMBFileServiceImpl implements INestFileService {
     private List<NestFile> orderList(String currentDir, Integer order, Comparator<NestFile> comparator) {
         List<NestFile> list = new ArrayList<>();
         try {
-            SmbFile smbFile = new SmbFile(currentDir, authContext);
+            SmbFile smbFile = this.createSmbFile(currentDir);
+            if (smbFile == null) return list;
             this.listAllFilesAndDirectories(smbFile, list, false); // 列出文件夹和文件
             if (order == null || order.equals(0)) {
                 return list;
@@ -238,5 +224,23 @@ public class NestSMBFileServiceImpl implements INestFileService {
     private String convertSMBURL(String protocol, String host, String urlFile) {
         //smb://userName:passWord@host/path/folderName
         return String.format("%s://%s:%s@%s%s", protocol, username, password, host, urlFile);
+    }
+
+    private SmbFile createSmbFile(String path) {
+        try {
+            if (!path.startsWith("smb://")) {
+                if (path.startsWith("/")) {
+                    path = String.format("smb://%s%s", host, path);
+                } else {
+                    path = String.format("smb://%s/%s", host, path);
+                }
+            }
+            SmbFile smbFile = new SmbFile(path, authContext);
+            return smbFile;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+
     }
 }
