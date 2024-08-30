@@ -43,7 +43,7 @@ public class SMBNestConnectionService implements INestConnectionService {
     @Override
     public List<String> scanNetwork() {
         try {
-            return LocalNetworkUtil.scanNetwork();
+            return LocalNetworkUtil.scanNetwork(445);
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -59,6 +59,11 @@ public class SMBNestConnectionService implements INestConnectionService {
      */
     @Override
     public NestResult<Boolean> open(String ip, String userName, String password) {
+        return this.open(ip, 445, userName, password);
+    }
+
+    @Override
+    public NestResult<Boolean> open(String ip, Integer port, String userName, String password) {
         try {
             // 使用默认配置创建 CIFS 上下文
             CIFSContext baseContext = SingletonContext.getInstance();

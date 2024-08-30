@@ -20,7 +20,9 @@ public interface INestConnectionService {
      * @param password 密码
      */
     NestResult<Boolean> open(String ip, String userName, String password);
-    
+
+    NestResult<Boolean> open(String ip, Integer port, String userName, String password);
+
 
     /**
      * 关闭连接

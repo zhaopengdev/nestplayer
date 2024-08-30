@@ -47,7 +47,7 @@ public class LocalNetworkUtil {
                 mask & 0xff);
     }
 
-    public static List<String> scanNetwork() throws Exception {
+    public static List<String> scanNetwork(int port) throws Exception {
         String ipAddress = getLocalIPAddress();
         if (ipAddress == null || ipAddress.isEmpty()) {
             return new ArrayList<>();
@@ -55,14 +55,14 @@ public class LocalNetworkUtil {
         int lastDotIndex = ipAddress.lastIndexOf('.');
         if (lastDotIndex == -1) return new ArrayList<>();
         String subnet = ipAddress.substring(0, lastDotIndex);
-        return scanNetwork(subnet);
+        return scanNetwork(subnet, port);
     }
 
-    public static List<String> scanNetwork(String subnet) throws Exception {
+    public static List<String> scanNetwork(String subnet, int port) throws Exception {
         List<String> list = new ArrayList<>();
         for (int i = 1; i < 255; i++) {
             String host = subnet + "." + i;
-            boolean available = isSmbServiceAvailable(host);
+            boolean available = isSmbServiceAvailable(host, port);
             if (available) {
                 list.add(host);
             }
@@ -70,8 +70,8 @@ public class LocalNetworkUtil {
         return list;
     }
 
-    public static boolean isSmbServiceAvailable(String host) {
-        try (Socket socket = new Socket(host, 445)) {
+    public static boolean isSmbServiceAvailable(String host, int port) {
+        try (Socket socket = new Socket(host, port)) {
             return true;
         } catch (IOException e) {
             return false;
