@@ -58,9 +58,17 @@ import {
 import shortVideoList from "./shortVideo/mock/short_video_data";
 import {leftExpand, leftTags} from "./filter/mock";
 import {buildQTTab} from "../pages/home/build_data/tab/TabAdapter";
+import {searchFilesByType} from "../utils/client";
+import {ESLog, useESLog} from "@extscreen/es3-core";
+
+const log : ESLog = useESLog()
+const TAG = "DebugNestPlayer"
 
 export function createGlobalApi(): IGlobalApi {
   let requestManager: RequestManager;
+
+
+
   function init(...params: any[]): Promise<any> {
     requestManager = params[0];
     return Promise.resolve();
@@ -129,6 +137,46 @@ export function createGlobalApi(): IGlobalApi {
     return items
   }
 
+  function getRealVideos(): Promise<Array<QTWaterfallItem>>{
+    // ESLog.i(TAG,"getRealVideos called")
+    searchFilesByType(['mp4','mkv','avi','flv','webM','3gp'],100,'').then((res) => {
+
+      console.log(`searchFilesByType result:${JSON.stringify(res)}`)
+      if(res.code == 200){
+        // ESLog.i(TAG,"getRealVideos result:",res.length)
+        let files = res.data
+        let items : Array<QTWaterfallItem> = []
+        for(let i  = 0;i < files.length; i++) {
+          let ri = files[i]
+          let item : QTWaterfallItem = {
+            _id: i.toString(),
+            type: 20000,
+            title: ri.fileName,
+            subTitle: ri.createTime,
+            videoUrl: ri.url,
+            size:[392,392],
+            style:{
+              width:392,
+              height:392
+            },
+            decoration: {
+              left: i == 0 ? 0 : 40,
+            }
+          }
+          items.push(item)
+        }
+        return Promise.resolve(items)
+      }else{
+        return Promise.reject(res.message)
+      }
+    }).catch((err) => {
+      console.error(err)
+      // ESLog.e(TAG,"getRealVideos err:"+err.toString())
+    })
+    // ESLog.e(TAG,"getRealVideos reject");
+    return Promise.reject('')
+  }
+
   function getMockVideos() : Promise<Array<QTWaterfallItem>> {
     let items : Array<QTWaterfallItem> = []
     for(let i = 0; i < 100; i++) {
@@ -160,7 +208,7 @@ export function createGlobalApi(): IGlobalApi {
     pageSize: number,
     tabPageIndex?: number
   ): Promise<QTTabPageData> {
-
+    // ESLog.e(TAG,`getTabContent tabId:${JSON.stringify(tabId)}`)
     let sections:QTWaterfallSection[] = []
     let tabContentData: QTTabPageData = {
       state: pageNo > 0 ?  QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE : QTTabPageState.QT_TAB_PAGE_STATE_COMPLETE,
@@ -191,28 +239,54 @@ export function createGlobalApi(): IGlobalApi {
       }
     }
     sections.push(historySection)
-    console.log(`push historySection`)
+    console.log(`getTabContent tabId:${tabId}`)
+    // log.i('DebugNestPlayer',`getTabContent tabId:${tabId}`)
+    // getMockVideos().then((res) => {
+    if(tabId == 'video') {
+      getRealVideos().then((res) => {
+        console.log(`itemList historySection res length:${res.length}`)
+        // ESLog.i(TAG,`itemList historySection res length:${res.length}`)
+        //historySection.itemList = res
+        let gridSectionList = buildGridSectionList(res,4)
+        gridSectionList[0].decoration!.bottom = gridSectionList[0].decoration!.bottom! + 40;
+        gridSectionList[0].decoration!.top = 48;
+        gridSectionList[0].titleStyle = {
+          width: 1000,
+          height:60
+        }
+        gridSectionList[0].title = '全部视频'
+        sections.push(...gridSectionList)
+        return Promise.resolve(tabContentData);
+      }).catch((err) => {
+        let tabContentData: QTTabPageData = {
+          state: 0,
+          data:sections
+        };
+        return Promise.resolve(tabContentData);
+      })
+    }else{
+      getMockVideos().then((res) => {
+        console.log(`itemList historySection res length:${res.length}`)
+        //historySection.itemList = res
+        let gridSectionList = buildGridSectionList(res,4)
+        gridSectionList[0].decoration!.bottom = gridSectionList[0].decoration!.bottom! + 40;
+        gridSectionList[0].decoration!.top = 48;
+        gridSectionList[0].titleStyle = {
+          width: 1000,
+          height:60
+        }
+        gridSectionList[0].title = '全部视频'
+        sections.push(...gridSectionList)
+        return Promise.resolve(tabContentData);
+      }).catch((err) => {
+        let tabContentData: QTTabPageData = {
+          state: 0,
+          data:sections
+        };
+        return Promise.resolve(tabContentData);
+      })
+    }
 
-    getMockVideos().then((res) => {
-      console.log(`itemList historySection res length:${res.length}`)
-      //historySection.itemList = res
-      let gridSectionList = buildGridSectionList(res,4)
-      gridSectionList[0].decoration!.bottom = gridSectionList[0].decoration!.bottom! + 40;
-      gridSectionList[0].decoration!.top = 48;
-      gridSectionList[0].titleStyle = {
-        width: 1000,
-        height:60
-      }
-      gridSectionList[0].title = '全部视频'
-      sections.push(...gridSectionList)
-      return Promise.resolve(tabContentData);
-    }).catch((err) => {
-      let tabContentData: QTTabPageData = {
-        state: 0,
-        data:sections
-      };
-      return Promise.resolve(tabContentData);
-    })
     return Promise.resolve(tabContentData)
   }
 

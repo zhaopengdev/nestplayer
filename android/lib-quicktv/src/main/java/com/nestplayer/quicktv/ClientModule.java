@@ -10,18 +10,24 @@ import com.nestplayer.lib.smb.SMBNestConnectionService;
 import com.nestplayer.lib.utils.LocalNetworkUtil;
 
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import eskit.sdk.support.EsPromise;
 import eskit.sdk.support.args.EsArray;
+import eskit.sdk.support.args.EsMap;
 import eskit.sdk.support.module.IEsModule;
+import eskit.sdk.support.module.es.ESModule;
 
 import android.util.Log;
 
 public class ClientModule implements IEsModule {
-    INestConnectionService service = new SMBNestConnectionService();
-    public static final String TAG = "ClientModule";
+    INestConnectionService mFileService = new SMBNestConnectionService();
+    public static final String TAG = "DebugNestPlayer";
+    public ExecutorService mExecutor = Executors.newFixedThreadPool(2);
 
 
     public ClientModule() {
@@ -39,7 +45,6 @@ public class ClientModule implements IEsModule {
         Log.i(TAG, "connectServer params: " + params);
         //service = new SMBNestConnectionService();
         String protocol = params.getString(0);
-
         String ip = params.getString(1);
 //        String port = params.getString(2);
         String username = params.getString(2);
@@ -49,15 +54,14 @@ public class ClientModule implements IEsModule {
             promise.reject("不支持的协议");
             return;
         }
-        Executors.newCachedThreadPool().submit(() -> {
-            Log.i(TAG, "connectServer start open");
-            NestResult<Boolean> result = service.open(ip, username, password);
+        mExecutor.submit(() -> {
+            NestResult<Boolean> result = mFileService.open(ip, username, password);
             if (result.isSuccess()) {
                 Log.i(TAG, "connectServer  open success");
-                promise.resolve("");
+                promise.resolve(ClientUtils.nestResultToHippyJson(result));
             } else {
-                Log.e(TAG, "connectServer  open failed");
-                promise.reject("链接失败");
+                Log.e(TAG, "connectServer  open failed " + result.getMessage());
+                promise.reject(ClientUtils.errorToHippyJson(result.getMessage()));
             }
         });
     }
@@ -101,27 +105,39 @@ public class ClientModule implements IEsModule {
     /**
      * 分页搜索所有视频列表
      *
-     * @param path
-     * @param type
-     * @param page
-     * @param pageSize
      * @param promise
      */
-    public void searchFilesByType(String path, String type, int page, int pageSize, EsPromise promise) {
+    public void searchFilesByType(EsArray array,EsPromise promise) {
 
-        EsArray array = new EsArray();
-
-        int fileCount = 100;
-        for (int i = 0; i < fileCount; i++) {
-            NestFile file = new NestFile();
-            file.setFileName("测试视频" + i);
-            file.setType(FileType.VIDEO);
-            file.setSize(100 * 1024);
-            file.setCreateTime(new Date().getTime());
-            array.pushMap(ClientUtils.nestFileToHippyJson(file));
+        final EsArray pathArray = array.getArray(0);
+        int pageSize = array.getInt(1);
+        String lastPath = array.getString(2);
+        Log.i(TAG, "searchFilesByType called pathArray: " + pathArray + " pageSize: " + pageSize + " lastPath: " + lastPath);
+        if(mFileService == null || mFileService.getNestFileService() == null){
+            promise.reject("请先链接服务器");
+            return;
         }
-        promise.resolve(array);
-
+        mExecutor.submit(() -> {
+            try {
+                ArrayList<String> postfixes = new ArrayList<>();
+                for(int i = 0; i < pathArray.size(); i++){
+                    String post = pathArray.getString(i);
+                    postfixes.add(post);
+                }
+                List<NestFile> files =  mFileService.getNestFileService().search(postfixes, lastPath, pageSize);
+                Log.i(TAG, "searchFilesByType from service fileCount is : " + (files == null ? 0 : files.size()));
+                //TODO 这里返回的结果不是视频文件
+                EsArray result = new EsArray();
+                for(NestFile file : files){
+                    final EsMap fileMap = ClientUtils.nestFileToHippyJson(file);
+                    Log.i(TAG,"searchFilesByType file: " + fileMap);
+                    result.pushMap(fileMap);
+                }
+                promise.resolve(ClientUtils.arrayToHippyJson(result));
+            } catch (Exception e) {
+                promise.reject(ClientUtils.errorToHippyJson("搜索失败"));
+            }
+        });
     }
 
 

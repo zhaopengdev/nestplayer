@@ -25,22 +25,32 @@
 import {defineComponent} from '@vue/runtime-core'
 import {connectSMBServer, getLocalIP} from '../../utils/client'
 import FullKeyBoard from "../../components/key-board.vue";
+import {useESLog, useESToast} from "@extscreen/es3-core";
+import {useESRouter} from "@extscreen/es3-router";
 
 export default defineComponent({
   name: "index.vue",
   components: {FullKeyBoard},
   setup(props, ctx) {
-    const protocol = 'smb'
-    let host :string = '192.168.1.'
-    const username = ''
-    const password = ''
+    //
 
+    const protocol = 'smb'
+    // let host :string = '192.168.1.'
+    // const username = ''
+    // const password = ''
+    let host :string = '192.168.3.17'
+    const username = '15600278700'
+    const password = '0511'
+    let ESLog = useESLog()
+    let TAG = "DebugNestPlayer"
+    const router = useESRouter()
+    let Toast = useESToast();
 
     function onESCreate(app,params){
       console.log("onESCreate client")
       getLocalIP().then((res:string) => {
         console.log(`getLocalIP : ${res}`)
-        host = res
+        //host = res
       })
     }
     function onClick(e){
@@ -50,6 +60,22 @@ export default defineComponent({
       // })
       connectSMBServer(host, username, password).then((res) => {
         console.log(`connectSMBServer : ${res}`)
+        ESLog.i(TAG,`connectSMBServer : ${res}`)
+        if(res){
+          if(res.code == 200){
+            router.push({
+              name: 'home',
+              params: {}
+            });
+          }else{
+            Toast.showLongToast(`添加错误: ${res.message}`)
+          }
+        }else{
+          Toast.showLongToast(`添加错误: ${res}`)
+        }
+      }).catch((err) => {
+        console.log(`connectSMBServer : ${err}`)
+        Toast.showLongToast(`添加错误: ${err}`)
       })
     }
     return {

@@ -34,32 +34,46 @@ export default defineComponent({
     const waterfallTabs = ref()
     const esEventBus = useESEventBus()
     let bgPlayerLevel = ref('after')
-    function onESCreate(params) {
+    let ESLog = useESLog()
+    let TAG = "DebugNestPlayer"
+    function onESCreate(app : any,params:any) {
+      ESLog.i(TAG,"onESCreate params:"+JSON.stringify(params))
       waterfallTabs.value?.onESCreate(params)
     }
 
+    function onESNewIntent(intent : any){
+      ESLog.i(TAG,`onESNewIntent intent:${JSON.stringify(intent)}`)
+      waterfallTabs?.value.reloadAll()
+    }
+
     function onESRestart(){
+      ESLog.i(TAG,"onESRestart ")
       waterfallTabs.value?.onESRestart()
     }
 
     function onESStart() {
-
+      ESLog.i(TAG,"onESStart ")
     }
+
     function onESPause() {
+      ESLog.i(TAG,"onESPause ")
       waterfallTabs.value?.onESPause()
     }
 
     function onESResume() {
+      ESLog.i(TAG,"onESResume ")
       esEventBus.emit("bg-player-life-cycle","onESResume")
       waterfallTabs.value?.onESResume()
     }
 
     function onESStop() {
+      ESLog.i(TAG,"onESStop ")
       esEventBus.emit("bg-player-life-cycle","onESStop")
       waterfallTabs.value?.onESStop()
     }
 
     function onESDestroy() {
+      ESLog.i(TAG,"onESDestroy ")
       esEventBus.emit("bg-player-life-cycle","onESDestroy")
       waterfallTabs.value?.onESDestroy()
     }
@@ -72,6 +86,7 @@ export default defineComponent({
     }
 
     function onBackPressed() {
+      ESLog.e(TAG,"onBackPressed ")
       waterfallTabs.value?.onBackPressed()
     }
 
@@ -90,7 +105,8 @@ export default defineComponent({
       onESRestart,
       onKeyDown,
       onKeyUp,
-      onBackPressed
+      onBackPressed,
+      onESNewIntent
     }
   }
 })

@@ -33,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
         // 第一步 设置启动参数
         EsData data = DataCreateHelper.createWithConfig();
 
+        final boolean debug = false;
+        if (debug) {
+            data = new EsData();
+            data.setAppDownloadUrl("http://192.168.3.4:38989");
+            data.setAppPackage("debug");
+        }
         if (data == null) {
             finish();
             return;

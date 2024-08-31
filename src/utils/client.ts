@@ -12,9 +12,9 @@ export function getLocalIP() : Promise<ReturnType<any>>{
     return Native.callNativeWithPromise(MODULE_NAME, 'getLocalIP', []);
 }
 
-export function searchFilesByType(path:string,type:string,page:number,pageSize:number)
+export function searchFilesByType(postfix:Array<String>,page : number,lastPath : String)
 : Promise<ReturnType<any>>{
-  return Native.callNativeWithPromise(MODULE_NAME, 'searchFilesByType',[path,type,page,pageSize]);
+  return Native.callNativeWithPromise(MODULE_NAME, 'searchFilesByType',[[postfix,page,lastPath]]);
 }
 
 export default {

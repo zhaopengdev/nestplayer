@@ -122,6 +122,8 @@ export default defineComponent({
       }
     }
     function initESLog() {
+      log.init()
+      log.e('DebugNestPlayer', 'APP INIT')
       if (BuildConfig.debug) {
         log.setMinimumLoggingLevel(ESLogLevel.DEBUG)
         playerLog.setMinimumLoggingLevel(ESPlayerLogLevel.DEBUG)

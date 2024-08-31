@@ -1,7 +1,7 @@
 import home from './pages/home/index.vue'
 import detail from './pages/detail/index.vue'
 import introduction from './pages/introduction/index.vue'
-import {ESRouteType} from "@extscreen/es3-router";
+import {ESRouteLaunchMode, ESRouteType} from "@extscreen/es3-router";
 import screenList from './pages/filter/index.vue'
 import search from './pages/search/index.vue'
 import web from './pages/web/index.vue'
@@ -30,6 +30,7 @@ const routes = [
     path: '/home',
     name: 'home',
     component: home,
+    launchMode: ESRouteLaunchMode.ES_ROUTE_LAUNCH_MODE_SINGLE_TASK
   },
   {
     path: '/series_view',
@@ -94,7 +95,7 @@ const routes = [
   },
   {
     path: '/client', name: 'client', component: client,
-    type: ESRouteType.ES_ROUTE_TYPE_DIALOG
+    type: ESRouteType.ES_ROUTE_TYPE_PAGE
   }
 ]
 export default routes
