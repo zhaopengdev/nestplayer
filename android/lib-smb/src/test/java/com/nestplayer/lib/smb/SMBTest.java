@@ -24,7 +24,7 @@ public class SMBTest {
         INestFileService fileService = service.getNestFileService();
 
         List<String> stringList = Arrays.asList("mp4", "rmvb");
-        List<NestFile> nestFiles = fileService.search(stringList, "/asedq/lanzhenkai/public/视频/教学/05.分布式专题（五）/2019-5-21（94）-使用缓存问题之缓存击穿解决方案&redis实现分布式-太白/缓存击穿和分布式锁.mp4", 20);
+        List<NestFile> nestFiles = fileService.search(stringList, "", 100);
 
         for (NestFile nestFile : nestFiles) {
             System.out.println(nestFile.getPath());
