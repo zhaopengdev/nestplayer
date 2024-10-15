@@ -109,9 +109,10 @@ public class ClientModule implements IEsModule {
      */
     public void searchFilesByType(EsArray array,EsPromise promise) {
 
-        final EsArray pathArray = array.getArray(0);
-        int pageSize = array.getInt(1);
-        String lastPath = array.getString(2);
+        EsArray esArray = array.getArray(0);
+        final EsArray pathArray = esArray.getArray(0);
+        int pageSize = esArray.getInt(1);
+        String lastPath = esArray.getString(2);
         Log.i(TAG, "searchFilesByType called pathArray: " + pathArray + " pageSize: " + pageSize + " lastPath: " + lastPath);
         if(mFileService == null || mFileService.getNestFileService() == null){
             promise.reject("请先链接服务器");
