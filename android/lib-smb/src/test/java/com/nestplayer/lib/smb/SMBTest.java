@@ -23,7 +23,7 @@ public class SMBTest {
         }
         INestFileService fileService = service.getNestFileService();
 
-        List<String> stringList = Arrays.asList("mp4", "rmvb");
+        List<String> stringList = Arrays.asList("mp4", "mkv","avi","flv","webM","3gp");
         List<NestFile> nestFiles = fileService.search(stringList, "", 100);
 
         for (NestFile nestFile : nestFiles) {
