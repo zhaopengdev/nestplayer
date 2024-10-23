@@ -21,13 +21,18 @@ public class SMBNestFileServiceImpl extends FileSearchPagination implements INes
     private final String username;
     private final String password;
     private final String host;
-
+    SmbFile[] shares;
     public SMBNestFileServiceImpl(CIFSContext authContext, SmbFile smbRoot, String username, String password, String host) {
         this.authContext = authContext;
         this.smbRoot = smbRoot;
         this.username = username;
         this.password = password;
         this.host = host;
+        try {
+            shares = smbRoot.listFiles();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -35,7 +40,6 @@ public class SMBNestFileServiceImpl extends FileSearchPagination implements INes
         List<NestFile> list = new ArrayList<>();
         try {
             // 列出所有共享目录
-            SmbFile[] shares = smbRoot.listFiles();
             if (shares == null || shares.length == 0) {
                 return list;
             }
@@ -77,7 +81,7 @@ public class SMBNestFileServiceImpl extends FileSearchPagination implements INes
             // 计算上一级目录路径
             if (currentDir.equals("/")) {
                 // 如果当前路径是根目录，则没有上一级目录
-                SmbFile[] shares = smbRoot.listFiles();
+//                SmbFile[] shares = smbRoot.listFiles();
                 for (SmbFile smbFile : shares) {
                     this.listAllFilesAndDirectories(smbFile, list, false); // 列出文件夹和文件
                 }
